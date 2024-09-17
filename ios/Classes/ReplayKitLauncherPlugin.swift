@@ -3,6 +3,7 @@ import ReplayKit
 
 class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
+
     static let kStatusChannel = "replay_kit_launcher/status"
     static let kBufferChannel = "replay_kit_launcher/buffer"
     static let kStartChannel = "replay_kit_launcher/start"
