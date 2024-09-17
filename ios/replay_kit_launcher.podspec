@@ -1,23 +1,26 @@
-#
-# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
-# Run `pod lib lint replay_kit_launcher.podspec' to validate before publishing.
-#
 Pod::Spec.new do |s|
   s.name             = 'replay_kit_launcher'
   s.version          = '1.0.0'
-  s.summary          = 'A flutter plugin of the launcher used to open RPSystemBroadcastPickerView for iOS'
+  s.summary          = 'A Flutter plugin to open RPSystemBroadcastPickerView for iOS'
   s.description      = <<-DESC
-A flutter plugin of the launcher used to open RPSystemBroadcastPickerView for iOS
+A Flutter plugin to open RPSystemBroadcastPickerView for iOS, rewritten in Swift.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'lombard-b.kz'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'A|M Smirnov' => 'smirnov.a.n.9107@gmail.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
-  s.public_header_files = 'Classes/**/*.h'
-  s.dependency 'Flutter'
+  s.source_files = 'Classes/**/*.{swift}'  # Указываем Swift файлы
   s.platform = :ios, '9.0'
+  
+  # Укажите версию Swift, если необходимо
+  s.swift_version = '5.0'  # Задаем версию Swift
 
-  # Flutter.framework does not contain a i386 slice. Only x86_64 simulators are supported.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64' }
+  s.dependency 'Flutter'
+
+  # Установки для поддержки Swift
+  s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'SWIFT_VERSION' => '5.0',  # Поддержка версии Swift
+    'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64'  # Поддержка эмуляторов на x86_64
+  }
 end
