@@ -33,6 +33,8 @@ class ReplayKitLauncher {
 
   static const EventChannel _statusChannel = const EventChannel('replay_kit_launcher/status');
 
+  static const EventChannel _bufferChannel = const EventChannel('replay_kit_launcher/buffer');
+
   static ReplayKitLauncherEnum? _intToStatus(String status) {
     switch (status) {
       case "0":
@@ -46,5 +48,9 @@ class ReplayKitLauncher {
 
   static Stream<ReplayKitLauncherEnum?> get statusEvent {
     return _statusChannel.receiveBroadcastStream().distinct().map((dynamic event) => _intToStatus(event as String));
+  }
+
+  static Stream<dynamic> get bufferChannel {
+    return _bufferChannel.receiveBroadcastStream().distinct();
   }
 }

@@ -2,6 +2,7 @@
 #import <ReplayKit/ReplayKit.h>
 
 static NSString *const kStatusChannel = @"replay_kit_launcher/status";
+static NSString *const kBufferChannel = @"replay_kit_launcher/buffer";
 static NSString *const kStartChannel = @"replay_kit_launcher/start";
 static NSString *const kStopChannel = @"replay_kit_launcher/stop";
 
@@ -106,6 +107,13 @@ static id _instance;
                                   (CFStringRef)kStopChannel,
                                   NULL,
                                   CFNotificationSuspensionBehaviorDeliverImmediately);
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                     (__bridge const void *)(self),
+                                     onBuffer,
+                                     (CFStringRef)kBufferChannel,
+                                     NULL,
+                                     CFNotificationSuspensionBehaviorDeliverImmediately);                                  
+                             
   return nil;
 }
 
@@ -118,6 +126,10 @@ static id _instance;
                                        (__bridge const void *)(self),
                                        (CFStringRef)kStopChannel,
                                        NULL);
+    CFNotificationCenterRemoveObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                        (__bridge const void *)(self),
+                                        (CFStringRef)kBufferChannel,
+                                        NULL);     
   eventSink = nil;
   return nil;
 }
@@ -132,6 +144,27 @@ void onStart(CFNotificationCenterRef center, void *observer, CFStringRef name, c
 }
 void onStop(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
     [[ReplayKitLauncherPlugin sharedInstance] sendStatus:@"1"];
+}
+
+
+void onBuffer(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+    // Преобразуйте CFDictionaryRef в NSDictionary
+    NSDictionary *userInfoDict = (__bridge NSDictionary *)userInfo;
+    
+    // Извлеките base64String из словаря
+    NSString *base64String = userInfoDict[@"sampleBufferData"];
+    
+    // Преобразуйте base64String обратно в NSData
+    NSData *imageData = [[NSData alloc] initWithBase64EncodedString:base64String options:0];
+    
+    // Убедитесь, что ReplayKitLauncherPlugin доступен
+    ReplayKitLauncherPlugin *plugin = [ReplayKitLauncherPlugin sharedInstance];
+    if (plugin) {
+        // Отправьте данные во Flutter
+        [plugin sendStatus:[imageData base64EncodedStringWithOptions:0]];
+    } else {
+        NSLog(@"ReplayKitLauncherPlugin instance is not available");
+    }
 }
 
 @end
