@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'replay_kit_launcher'
-  s.version          = '1.0.2+5'
+  s.version          = '1.0.2+6'
   s.summary          = 'A Flutter plugin to open RPSystemBroadcastPickerView for iOS'
   s.description      = <<-DESC
 A Flutter plugin to open RPSystemBroadcastPickerView for iOS, rewritten in Swift.
@@ -16,6 +16,7 @@ A Flutter plugin to open RPSystemBroadcastPickerView for iOS, rewritten in Swift
       'LD_RUNPATH_SEARCH_PATHS' => '/usr/lib/swift',
   }
   s.dependency 'Flutter'
+  s.swift_version = '5.0'
   s.platform = :ios, '12.0'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
 

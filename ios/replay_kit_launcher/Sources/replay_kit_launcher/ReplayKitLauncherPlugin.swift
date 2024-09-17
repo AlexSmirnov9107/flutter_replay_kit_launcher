@@ -1,7 +1,7 @@
 import Flutter
 import ReplayKit
 
-class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+public final class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
 
     static let kStatusChannel = "replay_kit_launcher/status"
@@ -16,7 +16,7 @@ class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         return ReplayKitLauncherPlugin()
     }()
     
-    static func register(with registrar: FlutterPluginRegistrar) {
+    public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "replay_kit_launcher", binaryMessenger: registrar.messenger())
         let instance = ReplayKitLauncherPlugin.shared
         registrar.addMethodCallDelegate(instance, channel: channel)
@@ -28,7 +28,7 @@ class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         bufferChannel.setStreamHandler(instance)  // Зарегистрируем буферный канал
     }
     
-    func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "launchReplayKitBroadcast":
             if let args = call.arguments as? [String: Any],
@@ -81,7 +81,7 @@ class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     }
     
     // StreamHandler для общего статуса
-    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         if arguments as? String == ReplayKitLauncherPlugin.kStatusChannel {
             statusEventSink = events
         } else if arguments as? String == ReplayKitLauncherPlugin.kBufferChannel {
@@ -90,7 +90,7 @@ class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         return nil
     }
     
-    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         if arguments as? String == ReplayKitLauncherPlugin.kStatusChannel {
             statusEventSink = nil
         } else if arguments as? String == ReplayKitLauncherPlugin.kBufferChannel {
