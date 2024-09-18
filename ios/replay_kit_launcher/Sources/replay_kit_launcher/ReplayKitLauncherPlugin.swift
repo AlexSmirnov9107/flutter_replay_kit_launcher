@@ -229,9 +229,7 @@ func onLog(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, na
         print("log")
            if let text = userDefaults.string(forKey: "log") {
                // Отправляем текст в Flutter
-               print("text: \(text)")
-               ReplayKitLauncherPlugin.shared.sendBuffer(text:text)
-               
+               ReplayKitLauncherPlugin.shared.sendLog(text:text)
                // Очищаем сохраненный текст
                userDefaults.removeObject(forKey: "log")
                userDefaults.synchronize()
