@@ -1,18 +1,20 @@
 import Flutter
 import ReplayKit
 
-public final class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
-
+public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     static let kStatusChannel = "replay_kit_launcher/status"
     static let kBufferChannel = "replay_kit_launcher/buffer"
     static let kStartChannel = "replay_kit_launcher/start"
     static let kStopChannel = "replay_kit_launcher/stop"
+    static let kLogChannel = "replay_kit_launcher/log"
+    
     
     var statusEventSink: FlutterEventSink?
-    var bufferEventSink: FlutterEventSink?  // Отдельный eventSink для буфера
+    var bufferEventSink: FlutterEventSink?
+    var logEventSink: FlutterEventSink?
 
-    static var shared: ReplayKitLauncherPlugin = {
+    public static var shared: ReplayKitLauncherPlugin = {
         return ReplayKitLauncherPlugin()
     }()
     
@@ -25,7 +27,10 @@ public final class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStre
         statusChannel.setStreamHandler(instance)
 
         let bufferChannel = FlutterEventChannel(name: kBufferChannel, binaryMessenger: registrar.messenger())
-        bufferChannel.setStreamHandler(instance)  // Зарегистрируем буферный канал
+        bufferChannel.setStreamHandler(instance)
+        
+        let logChannel = FlutterEventChannel(name: kLogChannel, binaryMessenger: registrar.messenger())
+        logChannel.setStreamHandler(instance)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -80,34 +85,116 @@ public final class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStre
         }
     }
     
-    // StreamHandler для общего статуса
+    // Добавляем наблюдателей для событий через CFNotificationCenter
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         if arguments as? String == ReplayKitLauncherPlugin.kStatusChannel {
             statusEventSink = events
+            CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                            Unmanaged.passUnretained(self).toOpaque(),
+                                            onStart,
+                                            ReplayKitLauncherPlugin.kStartChannel as CFString,
+                                            nil,
+                                            .deliverImmediately)
+            CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                            Unmanaged.passUnretained(self).toOpaque(),
+                                            onStop,
+                                            ReplayKitLauncherPlugin.kStopChannel as CFString,
+                                            nil,
+                                            .deliverImmediately)
+           
         } else if arguments as? String == ReplayKitLauncherPlugin.kBufferChannel {
-            bufferEventSink = events  // Обрабатываем отдельно eventSink для буфера
+            bufferEventSink = events
+            CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                            Unmanaged.passUnretained(self).toOpaque(),
+                                            onBuffer,
+                                            ReplayKitLauncherPlugin.kBufferChannel as CFString,
+                                            nil,
+                                            .deliverImmediately)
+          
+        }else if arguments as? String == ReplayKitLauncherPlugin.kLogChannel {
+            logEventSink = events
+            CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                            Unmanaged.passUnretained(self).toOpaque(),
+                                            onLog,
+                                            ReplayKitLauncherPlugin.kLogChannel as CFString,
+                                            nil,
+                                            .deliverImmediately)
+          
         }
+        
+        print("onListen @arguments: \(String(describing: arguments))")
+     
+       
         return nil
     }
     
+    // Удаляем наблюдателей при отмене подписки
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        print("onCancel @arguments: \(String(describing: arguments))")
         if arguments as? String == ReplayKitLauncherPlugin.kStatusChannel {
             statusEventSink = nil
+            CFNotificationCenterRemoveObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                               Unmanaged.passUnretained(self).toOpaque(),
+                                               CFNotificationName(ReplayKitLauncherPlugin.kStartChannel as CFString),
+                                               nil)
+            CFNotificationCenterRemoveObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                               Unmanaged.passUnretained(self).toOpaque(),
+                                               CFNotificationName(ReplayKitLauncherPlugin.kStopChannel as CFString),  // Преобразование к CFString
+                                               nil)
+           
         } else if arguments as? String == ReplayKitLauncherPlugin.kBufferChannel {
-            bufferEventSink = nil  // Освобождаем eventSink для буфера
+            bufferEventSink = nil
+            CFNotificationCenterRemoveObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                               Unmanaged.passUnretained(self).toOpaque(),
+                                               CFNotificationName(ReplayKitLauncherPlugin.kBufferChannel as CFString),  // Преобразование к CFString
+                                               nil)
         }
+        else if arguments as? String == ReplayKitLauncherPlugin.kLogChannel {
+            logEventSink = nil
+            CFNotificationCenterRemoveObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                               Unmanaged.passUnretained(self).toOpaque(),
+                                               CFNotificationName(ReplayKitLauncherPlugin.kLogChannel as CFString),  // Преобразование к CFString
+                                               nil)
+        }
+      
+      
         return nil
     }
     
-    // Отправка статуса в основной eventSink
-    func sendStatus(_ status: String) {
+    public func sendStatus(_ status: String) {
         statusEventSink?(status)
     }
     
-    // Отправка данных буфера
-    func sendBuffer(_ buffer: Data) {
-        let base64Buffer = buffer.base64EncodedString()
-        bufferEventSink?(base64Buffer)
+    private func readBufferFromAppGroup(key: String) -> Data? {
+        if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.kz.white.broadcast") {
+            let fileURL = containerURL.appendingPathComponent(key)
+            do {
+                let data = try Data(contentsOf: fileURL)
+                return data
+            } catch {
+                print("Failed to read buffer: \(error)")
+                return nil
+            }
+        }
+        return nil
+    }
+    //
+    
+    public func sendBuffer(text: String) {
+        // Проверяем, что bufferEventSink не равен nil
+        if let eventSink = bufferEventSink {
+                eventSink(text)
+        } else {
+            print("bufferEventSink is not set")
+        }
+    }
+    public func sendLog(text: String) {
+        // Проверяем, что bufferEventSink не равен nil
+        if let eventSink = logEventSink {
+                eventSink(text)
+        } else {
+            print("logEventSink is not set")
+        }
     }
 }
 
@@ -120,14 +207,35 @@ func onStart(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, 
 func onStop(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, name: CFNotificationName?, object: UnsafeRawPointer?, userInfo: CFDictionary?) {
     ReplayKitLauncherPlugin.shared.sendStatus("1")
 }
-
 // Уведомление для буфера
 func onBuffer(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, name: CFNotificationName?, object: UnsafeRawPointer?, userInfo: CFDictionary?) {
-    if let userInfo = userInfo as? [String: Any],
-       let base64String = userInfo["sampleBufferData"] as? String,
-       let bufferData = Data(base64Encoded: base64String) {
-        ReplayKitLauncherPlugin.shared.sendBuffer(bufferData)
-    } else {
-        print("Error: Invalid buffer data")
-    }
+    if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
+        print("onBuffer")
+           if let text = userDefaults.string(forKey: "recognizedText") {
+               // Отправляем текст в Flutter
+               print("text: \(text)")
+               ReplayKitLauncherPlugin.shared.sendBuffer(text:text)
+               
+               // Очищаем сохраненный текст
+               userDefaults.removeObject(forKey: "recognizedText")
+               userDefaults.synchronize()
+           }
+       }
+     // Возвращаем буфер в виде строки Base64
+}
+
+func onLog(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, name: CFNotificationName?, object: UnsafeRawPointer?, userInfo: CFDictionary?) {
+    if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
+        print("log")
+           if let text = userDefaults.string(forKey: "log") {
+               // Отправляем текст в Flutter
+               print("text: \(text)")
+               ReplayKitLauncherPlugin.shared.sendBuffer(text:text)
+               
+               // Очищаем сохраненный текст
+               userDefaults.removeObject(forKey: "log")
+               userDefaults.synchronize()
+           }
+       }
+     // Возвращаем буфер в виде строки Base64
 }
