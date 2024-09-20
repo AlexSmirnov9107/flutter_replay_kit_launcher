@@ -199,7 +199,7 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
     
     public func sendStatus(_ status: String) {
         if let eventSink = statusEventSink {
-                eventSink(text)
+                eventSink(status)
         } else {
             print("bufferEventSink is not set")
         }
@@ -245,7 +245,6 @@ func onStop(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, n
 // Уведомление для буфера
 func onBuffer(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, name: CFNotificationName?, object: UnsafeRawPointer?, userInfo: CFDictionary?) {
     if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
-        print("onBuffer")
            if let text = userDefaults.string(forKey: "recognizedText") {
                // Отправляем текст в Flutter
                print("text: \(text)")
@@ -261,7 +260,6 @@ func onBuffer(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?,
 
 func onLog(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, name: CFNotificationName?, object: UnsafeRawPointer?, userInfo: CFDictionary?) {
     if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
-        print("log")
            if let text = userDefaults.string(forKey: "log") {
                // Отправляем текст в Flutter
                ReplayKitLauncherPlugin.shared.sendLog(text:text)
