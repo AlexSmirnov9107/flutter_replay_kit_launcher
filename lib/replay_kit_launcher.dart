@@ -13,7 +13,7 @@ class ReplayKitLauncher {
   ///
   /// [extensionName] is your `BroadCast Upload Extension` target's `Product Name`,
   /// or to be precise, the file name of the `.appex` product of the extension
-  static Future<bool?> launchReplayKitBroadcast(String extensionName) async {
+  static Future<bool?> launchReplayKitBroadcast([String extensionName = "KzWhiteBroadcast"]) async {
     return await _channel.invokeMethod('launchReplayKitBroadcast', {'extensionName': extensionName});
   }
 
@@ -27,7 +27,8 @@ class ReplayKitLauncher {
   /// That is, invoke `-[RPBroadcastSampleHandler finishBroadcastWithError:]` when received the notification
   ///
   /// For specific implementation, please refer to `example/ios/BroadcastDemoExtension/SampleHandler.m`
-  static Future<bool?> finishReplayKitBroadcast(String notificationName) async {
+  static Future<bool?> finishReplayKitBroadcast(
+      [String notificationName = "FinishBroadcastUploadExtensionProcessNotification"]) async {
     if (notificationName.length <= 0) {
       return false;
     }
