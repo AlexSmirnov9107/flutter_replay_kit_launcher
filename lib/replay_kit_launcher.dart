@@ -17,8 +17,8 @@ class ReplayKitLauncher {
     return await _channel.invokeMethod('launchReplayKitBroadcast', {'extensionName': extensionName});
   }
 
-  static Future<bool?> checkToggle(String toggleName) async {
-    return await _channel.invokeMethod('checkToggle', {'toggleName': toggleName});
+  static Future<bool?> getData() async {
+    return await _channel.invokeMethod('getData');
   }
 
   /// This function will post a notification by `CFNotificationCenterPostNotification()` with `notificationName`
@@ -40,7 +40,6 @@ class ReplayKitLauncher {
 
   static const EventChannel _bufferChannel = const EventChannel('replay_kit_launcher/buffer');
   static const EventChannel _logChannel = const EventChannel('replay_kit_launcher/log');
-  static const EventChannel _toggleChannel = const EventChannel('replay_kit_launcher/toggle');
 
   static ReplayKitLauncherEnum? _intToStatus(String status) {
     switch (status) {
@@ -66,9 +65,5 @@ class ReplayKitLauncher {
 
   static Stream<String> get logChannel {
     return _logChannel.receiveBroadcastStream('replay_kit_launcher/log').map((v) => v.toString());
-  }
-
-  static Stream<String> get toggleChannel {
-    return _toggleChannel.receiveBroadcastStream('replay_kit_launcher/toggle').map((v) => v.toString());
   }
 }

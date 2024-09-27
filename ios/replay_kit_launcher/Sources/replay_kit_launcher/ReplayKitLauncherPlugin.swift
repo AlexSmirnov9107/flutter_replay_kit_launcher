@@ -8,14 +8,14 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
     static let kStartChannel = "replay_kit_launcher/start"
     static let kStopChannel = "replay_kit_launcher/stop"
     static let kLogChannel = "replay_kit_launcher/log"
-    static let kToggleChannel = "replay_kit_launcher/toggle"
-    static let kCheckToggleChannel = "replay_kit_launcher/checkToggle"
+    static let kDataChannel = "replay_kit_launcher/data"
+
     
     
     var statusEventSink: FlutterEventSink?
     var bufferEventSink: FlutterEventSink?
     var logEventSink: FlutterEventSink?
-    var toggleEventSink: FlutterEventSink?
+
 
     public static var shared: ReplayKitLauncherPlugin = {
         return ReplayKitLauncherPlugin()
@@ -35,8 +35,6 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
         let logChannel = FlutterEventChannel(name: kLogChannel, binaryMessenger: registrar.messenger())
         logChannel.setStreamHandler(instance)
         
-        let toggleChannel = FlutterEventChannel(name: kToggleChannel, binaryMessenger: registrar.messenger())
-        toggleChannel.setStreamHandler(instance)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -48,21 +46,12 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
             } else {
                 result(FlutterError(code: "INVALID_ARGUMENTS", message: "Missing extension name", details: nil))
             }
-        case "checkToggle":
-            if let args = call.arguments as? [String: Any],
-               let notificationName = args["toggleName"] as? String {
-                
-                if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
-                    userDefaults.set(notificationName, forKey: "toggleName")
-                    userDefaults.synchronize()
-                }
-                CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
-                                                     CFNotificationName(ReplayKitLauncherPlugin.kCheckToggleChannel as CFString),
-                                                     nil, nil, true)
-                result(true)
-            } else {
-                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Missing notification name", details: nil))
-            }
+        case "getData":
+            CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+                                                 CFNotificationName(ReplayKitLauncherPlugin.kGetDataChannel as CFString),
+                                                 nil, nil, true)
+            result(true)
+           
         case "finishReplayKitBroadcast":
             if let args = call.arguments as? [String: Any],
                let notificationName = args["notificationName"] as? String {
@@ -141,15 +130,6 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
                                             nil,
                                             .deliverImmediately)
           
-        } else if arguments as? String == ReplayKitLauncherPlugin.kToggleChannel {
-            toggleEventSink = events
-            CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
-                                            Unmanaged.passUnretained(self).toOpaque(),
-                                            onToggleCheckResult,
-                                            ReplayKitLauncherPlugin.kToggleChannel as CFString,
-                                            nil,
-                                            .deliverImmediately)
-          
         }
         
         print("onListen @arguments: \(String(describing: arguments))")
@@ -184,12 +164,6 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
                                                Unmanaged.passUnretained(self).toOpaque(),
                                                CFNotificationName(ReplayKitLauncherPlugin.kLogChannel as CFString),  // Преобразование к CFString
                                                nil)
-        } else if arguments as? String == ReplayKitLauncherPlugin.kLogChannel {
-            toggleEventSink = nil
-            CFNotificationCenterRemoveObserver(CFNotificationCenterGetDarwinNotifyCenter(),
-                                               Unmanaged.passUnretained(self).toOpaque(),
-                                               CFNotificationName(ReplayKitLauncherPlugin.kToggleChannel as CFString),  // Преобразование к CFString
-                                               nil)
         }
         
       
@@ -223,14 +197,7 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
         }
     }
     
-    public func sendToggleResult(text: String) {
-        
-        if let eventSink = toggleEventSink {
-                eventSink(text)
-        } else {
-            print("logEventSink is not set")
-        }
-    }
+    
 }
 
 // Уведомление при старте
@@ -265,21 +232,6 @@ func onLog(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, na
                ReplayKitLauncherPlugin.shared.sendLog(text:text)
                // Очищаем сохраненный текст
                userDefaults.removeObject(forKey: "log")
-               userDefaults.synchronize()
-           }
-       }
-     // Возвращаем буфер в виде строки Base64
-}
-
-func onToggleCheckResult(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?, name: CFNotificationName?, object: UnsafeRawPointer?, userInfo: CFDictionary?) {
-    if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
-        
-           if let text = userDefaults.string(forKey: "toggleEnabled") {
-               // Отправляем текст в Flutter
-               ReplayKitLauncherPlugin.shared.sendToggleResult(text:text)
-               // Очищаем сохраненный текст
-               userDefaults.removeObject(forKey: "toggleEnabled")
-               userDefaults.removeObject(forKey: "toggleName")
                userDefaults.synchronize()
            }
        }
