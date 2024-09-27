@@ -48,7 +48,7 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
             }
         case "getData":
             CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
-                                                 CFNotificationName(ReplayKitLauncherPlugin.kGetDataChannel as CFString),
+                                                 CFNotificationName(ReplayKitLauncherPlugin.kDataChannel as CFString),
                                                  nil, nil, true)
             result(true)
            

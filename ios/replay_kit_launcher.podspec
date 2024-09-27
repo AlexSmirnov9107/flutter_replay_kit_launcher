@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'replay_kit_launcher'
-  s.version          = '1.0.6'
+  s.version          = '1.0.6+1'
   s.summary          = 'A Flutter plugin to open RPSystemBroadcastPickerView for iOS'
   s.description      = <<-DESC
 A Flutter plugin to open RPSystemBroadcastPickerView for iOS, rewritten in Swift.
