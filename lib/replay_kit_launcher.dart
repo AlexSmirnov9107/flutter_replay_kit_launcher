@@ -13,8 +13,9 @@ class ReplayKitLauncher {
   ///
   /// [extensionName] is your `BroadCast Upload Extension` target's `Product Name`,
   /// or to be precise, the file name of the `.appex` product of the extension
-  static Future<bool?> launchReplayKitBroadcast([String extensionName = "KzWhiteBroadcast"]) async {
-    return await _channel.invokeMethod('launchReplayKitBroadcast', {'extensionName': extensionName});
+  static Future<bool?> launchReplayKitBroadcast(
+      {String extensionName = "KzWhiteBroadcast", Map<String, dynamic> extra = const {}}) async {
+    return await _channel.invokeMethod('launchReplayKitBroadcast', {'extensionName': extensionName, ...extra});
   }
 
   static Future<bool?> getData() async {

@@ -42,6 +42,13 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
         case "launchReplayKitBroadcast":
             if let args = call.arguments as? [String: Any],
                let extensionName = args["extensionName"] as? String {
+                let message = try JSONSerialization.data(withJSONObject: args, options: [])
+                if let messageString = String(data: message, encoding: .utf8) {
+                      if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
+                            userDefaults.set(messageString, forKey: "extra")
+                            userDefaults.synchronize()
+                    }
+                }
                 launchReplayKitBroadcast(extensionName: extensionName, result: result)
             } else {
                 result(FlutterError(code: "INVALID_ARGUMENTS", message: "Missing extension name", details: nil))
@@ -221,7 +228,7 @@ func onBuffer(center: CFNotificationCenter?, observer: UnsafeMutableRawPointer?,
                userDefaults.removeObject(forKey: "recognizedText")
                userDefaults.synchronize()
            }
-       }
+    }
      // Возвращаем буфер в виде строки Base64
 }
 
