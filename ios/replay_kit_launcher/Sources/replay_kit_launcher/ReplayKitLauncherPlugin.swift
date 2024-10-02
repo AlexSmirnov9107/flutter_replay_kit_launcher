@@ -42,12 +42,17 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
         case "launchReplayKitBroadcast":
             if let args = call.arguments as? [String: Any],
                let extensionName = args["extensionName"] as? String {
-                let message = try JSONSerialization.data(withJSONObject: args, options: [])
-                if let messageString = String(data: message, encoding: .utf8) {
-                      if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
+                do {
+                    let message = try JSONSerialization.data(withJSONObject: args, options: [])
+                    if let messageString = String(data: message, encoding: .utf8) {
+                        if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
                             userDefaults.set(messageString, forKey: "extra")
                             userDefaults.synchronize()
+                        }
                     }
+                } catch {
+                    let errorMessage = "Failed to serialize arguments to JSON: \(error)";
+                    sendLog(text: errorMessage)
                 }
                 launchReplayKitBroadcast(extensionName: extensionName, result: result)
             } else {
