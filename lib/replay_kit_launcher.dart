@@ -26,18 +26,18 @@ class ReplayKitLauncher {
   /// - [lineExtraBottomHeight]: Дополнительная высота снизу линии (по умолчанию 1.3).
   /// - [blueColorThreshold]: Порог синего цвета (по умолчанию 0.3).
   static Future<bool?> getData({
-    double targetWidth = 440,
-    double lineThreshold = 0.035,
-    double lineExtraTopHeight = 0.3,
-    double lineExtraBottomHeight = 1.3,
-    double blueColorThreshold = 0.3,
+    double? targetWidth = 440,
+    double? lineThreshold = 0.035,
+    double? lineExtraTopHeight = 0.3,
+    double? lineExtraBottomHeight = 1.3,
+    double? blueColorThreshold = 0.3,
   }) async {
     return await _channel.invokeMethod('getData', {
-      'targetWidth': targetWidth,
-      'lineThreshold': lineThreshold,
-      'lineExtraTopHeight': lineExtraTopHeight,
-      'lineExtraBottomHeight': lineExtraBottomHeight,
-      'blueColorThreshold': blueColorThreshold,
+      'targetWidth': targetWidth ?? 440,
+      'lineThreshold': lineThreshold ?? 0.035,
+      'lineExtraTopHeight': lineExtraTopHeight ?? 0.3,
+      'lineExtraBottomHeight': lineExtraBottomHeight ?? 1.3,
+      'blueColorThreshold': blueColorThreshold ?? 0.3,
     });
   }
 
