@@ -59,6 +59,20 @@ public class ReplayKitLauncherPlugin: NSObject, FlutterPlugin, FlutterStreamHand
                 result(FlutterError(code: "INVALID_ARGUMENTS", message: "Missing extension name", details: nil))
             }
         case "getData":
+            if let args = call.arguments as? [String: Any] {
+                do {
+                    let message = try JSONSerialization.data(withJSONObject: args, options: [])
+                    if let messageString = String(data: message, encoding: .utf8) {
+                        if let userDefaults = UserDefaults(suiteName: "group.kz.white.broadcast") {
+                            userDefaults.set(messageString, forKey: "get_data_args")
+                            userDefaults.synchronize()
+                        }
+                    }
+                } catch {
+                    let errorMessage = "Failed to serialize arguments to JSON: \(error)";
+                    sendLog(text: errorMessage)
+                }
+            }
             CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
                                                  CFNotificationName(ReplayKitLauncherPlugin.kDataChannel as CFString),
                                                  nil, nil, true)

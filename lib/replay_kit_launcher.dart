@@ -18,8 +18,27 @@ class ReplayKitLauncher {
     return await _channel.invokeMethod('launchReplayKitBroadcast', {'extensionName': extensionName, ...extra});
   }
 
-  static Future<bool?> getData() async {
-    return await _channel.invokeMethod('getData');
+  /// Получает данные с параметрами, которые можно настроить.
+  ///
+  /// - [targetWidth]: Ширина цели (по умолчанию 440).
+  /// - [lineThreshold]: Порог линии (по умолчанию 0.035).
+  /// - [lineExtraTopHeight]: Дополнительная высота сверху линии (по умолчанию 0.3).
+  /// - [lineExtraBottomHeight]: Дополнительная высота снизу линии (по умолчанию 1.3).
+  /// - [blueColorThreshold]: Порог синего цвета (по умолчанию 0.3).
+  static Future<bool?> getData({
+    double targetWidth = 440,
+    double lineThreshold = 0.035,
+    double lineExtraTopHeight = 0.3,
+    double lineExtraBottomHeight = 1.3,
+    double blueColorThreshold = 0.3,
+  }) async {
+    return await _channel.invokeMethod('getData', {
+      'targetWidth': targetWidth,
+      'lineThreshold': lineThreshold,
+      'lineExtraTopHeight': lineExtraTopHeight,
+      'lineExtraBottomHeight': lineExtraBottomHeight,
+      'blueColorThreshold': blueColorThreshold,
+    });
   }
 
   /// This function will post a notification by `CFNotificationCenterPostNotification()` with `notificationName`
