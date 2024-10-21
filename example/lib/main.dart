@@ -20,7 +20,7 @@ class _MyAppState extends State<MyApp> {
 
   void launch() {
     // Please fill in the name of the Broadcast Extension in your project, which is the file name of the `.appex` product
-    ReplayKitLauncher.launchReplayKitBroadcast('BroadcastDemoExtension');
+    ReplayKitLauncher.launchReplayKitBroadcast();
   }
 
   void finish() {
